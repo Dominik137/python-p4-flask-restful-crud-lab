@@ -41,15 +41,21 @@ class Plants(Resource):
 api.add_resource(Plants, '/plants')
 
 
-class PlantByID(Resource):
-
-    def get(self, id):
-        plant = Plant.query.filter_by(id=id).first().to_dict()
-        return make_response(jsonify(plant), 200)
-
-
-api.add_resource(PlantByID, '/plants/<int:id>')
+@app.route('/plants/<int:id>', methods=["PATCH", "DELETE"])
+def plant_by_id(id):
+    plant = Plant.query.filter_by(id = id).first()
+    if request.method == "PATCH":
+        json_dict = request.get_json()
+        for attr in json_dict:
+            setattr(plant, attr, json_dict.get(attr))
+        db.session.add(plant)
+        db.session.commit()
+        return plant.to_dict(), 200
+    elif request.method == "DELETE":
+        db.session.delete(plant)
+        db.session.commit()
+        return {}, 200
 
 
 if __name__ == '__main__':
-    app.run(port=5555, debug=True)
+    app.run(port=5556, debug=True)
